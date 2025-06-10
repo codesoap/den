@@ -1,0 +1,57 @@
+CREATE TABLE file(
+	id       INTEGER PRIMARY KEY,
+	path     TEXT NOT NULL,
+	size     INTEGER NOT NULL,
+	modified INTEGER NOT NULL,
+	mime     TEXT NOT NULL,
+);
+
+CREATE TABLE picture(
+	id     INTEGER PRIMARY KEY,
+	camera TEXT,
+	file   INTEGER NOT NULL,
+	FOREIGN KEY(file) REFERENCES file(id)
+);
+
+CREATE TABLE video(
+	id     INTEGER PRIMARY KEY,
+	length INTEGER,
+	file   INTEGER NOT NULL,
+	FOREIGN KEY(file) REFERENCES file(id)
+);
+
+CREATE TABLE audio(
+	id     INTEGER PRIMARY KEY,
+	length INTEGER,
+	author TEXT,
+	album  TEXT,
+	title  TEXT,
+	year   INTEGER,
+	file   INTEGER NOT NULL,
+	FOREIGN KEY(file) REFERENCES file(id)
+);
+
+CREATE TABLE document(
+	id   INTEGER PRIMARY KEY,
+	file INTEGER NOT NULL,
+	FOREIGN KEY(file) REFERENCES file(id)
+);
+
+CREATE TABLE archive(
+	id   INTEGER PRIMARY KEY,
+	file INTEGER NOT NULL,
+	FOREIGN KEY(file) REFERENCES file(id)
+);
+
+CREATE TABLE executable(
+	id   INTEGER PRIMARY KEY,
+	file INTEGER NOT NULL,
+	FOREIGN KEY(file) REFERENCES file(id)
+);
+
+CREATE TABLE tag(
+	id   INTEGER PRIMARY KEY,
+	tag  TEXT NOT NULL,
+	file INTEGER NOT NULL,
+	FOREIGN KEY(file) REFERENCES file(id)
+);
