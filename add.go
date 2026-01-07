@@ -42,9 +42,15 @@ func Add(path string, db database.DB, progress chan Progress) error {
 	if err := db.TrackPath(path); err != nil {
 		return fmt.Errorf("could not track path '%s': %s", path, err)
 	}
+	prog := Progress{}
+	var lastProgressUpdate time.Time
 	paths := make(map[string]fs.DirEntry)
 	err = filepath.WalkDir(path,
 		func(path string, d fs.DirEntry, err error) error {
+			if time.Since(lastProgressUpdate) >= time.Second {
+				progress <- prog
+				lastProgressUpdate = time.Now()
+			}
 			if err != nil {
 				return err
 			}
@@ -63,6 +69,7 @@ func Add(path string, db database.DB, progress chan Progress) error {
 			}
 			// TODO: Use temporary SQLite table to use less memory:
 			paths[path] = d
+			prog.Total++
 			return nil
 		})
 	if err != nil {
@@ -70,8 +77,6 @@ func Add(path string, db database.DB, progress chan Progress) error {
 	}
 
 	entriesInTx := 0
-	var lastProgressUpdate time.Time
-	prog := Progress{Total: len(paths)}
 	for path, d := range paths {
 		if time.Since(lastProgressUpdate) >= time.Second {
 			progress <- prog

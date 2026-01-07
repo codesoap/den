@@ -19,13 +19,10 @@ Here is are a few examples to get started quickly:
 ```console
 $ # Track (non-hidden) files within ~/Documents, ~/Pictures and ~/Music:
 $ den track ~/Documents
-Collecting file paths... done
 Indexing 100% (3934/3934)... done
 $ den track ~/Music
-Collecting file paths... done
 Indexing 100% (768/768)... done
 $ den track ~/Pictures
-Collecting file paths... done
 Indexing 100% (320/320)... done
 
 $ # Check which paths are tracked by den:

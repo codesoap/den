@@ -205,23 +205,13 @@ func add() {
 	progress := make(chan den.Progress)
 	var wg sync.WaitGroup
 	wg.Go(func() {
-		fmt.Fprint(os.Stderr, "Collecting file paths... ")
-		collectingDone := false
 		for {
 			prog, ok := <-progress
 			if !ok {
-				if collectingDone {
-					// Only assume we're done if at least one file was added before:
-					fmt.Fprintf(os.Stderr, "done\n")
-				}
 				return
 			}
-			if !collectingDone {
-				fmt.Fprintf(os.Stderr, "done\n")
-				collectingDone = true
-			}
 			if prog.Total == 0 {
-				fmt.Fprintf(os.Stderr, "\rIndexing 100%% (0/0)... ")
+				fmt.Fprintf(os.Stderr, "\rIndexing 0%% (0/0)... ")
 			} else {
 				fmt.Fprintf(os.Stderr, "\rIndexing %d%% (%d/%d)... ",
 					prog.Done*100/prog.Total, prog.Done, prog.Total)
@@ -232,6 +222,7 @@ func add() {
 		log.Fatalln("Could not index dir:", err)
 	}
 	wg.Wait()
+	fmt.Fprintf(os.Stderr, "done\n")
 }
 
 func listTracked() {
