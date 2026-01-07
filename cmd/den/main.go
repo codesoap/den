@@ -45,7 +45,6 @@ func initDB() {
 		log.Fatalln("Could not create database directory:", err)
 	}
 	dbPath := filepath.Join(dbDir, "db.sqlite3")
-	_, err = os.Stat(dbPath)
 	db, err = database.NewDB(dbPath)
 	if err != nil {
 		log.Fatalln("Could not get database:", err)
