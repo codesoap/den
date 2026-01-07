@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/codesoap/den"
@@ -202,7 +203,8 @@ func add() {
 	}
 	path := flag.Arg(1)
 	progress := make(chan den.Progress)
-	go func() {
+	var wg sync.WaitGroup
+	wg.Go(func() {
 		fmt.Fprint(os.Stderr, "Collecting file paths... ")
 		collectingDone := false
 		for {
@@ -225,10 +227,11 @@ func add() {
 					prog.Done*100/prog.Total, prog.Done, prog.Total)
 			}
 		}
-	}()
+	})
 	if err := den.Add(path, db, progress); err != nil {
 		log.Fatalln("Could not index dir:", err)
 	}
+	wg.Wait()
 }
 
 func listTracked() {
@@ -260,7 +263,8 @@ func rescan() {
 		log.Fatalln("Got unexpected arguments for the rescan command.")
 	}
 	progress := make(chan den.Progress)
-	go func() {
+	var wg sync.WaitGroup
+	wg.Go(func() {
 		fmt.Fprint(os.Stderr, "Checking need for updates... ")
 		updateReceived := false
 		for {
@@ -284,8 +288,9 @@ func rescan() {
 					prog.Done*100/prog.Total, prog.Done, prog.Total)
 			}
 		}
-	}()
+	})
 	if err := den.Rescan(db, progress); err != nil {
 		log.Fatalf("Could not rescan: %s\n", err)
 	}
+	wg.Wait()
 }
