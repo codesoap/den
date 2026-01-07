@@ -8,10 +8,14 @@ but will probably work on other UNIX-like operating systems as well. Things
 might change significantly as development continues.
 
 # Installation
-Make sure you have the C library "mediainfo" installed, then:
+Make sure you have the C library "mediainfo" installed. On Debian, it
+can be added with `sudo apt install libmediainfo-dev`. It can be removed
+after den has been installed.
+
+Once that's done, den can be installed with this command:
 
 ```
-go install github.com/codesoap/den@latest
+go install github.com/codesoap/den/cmd/den@latest
 ```
 
 # Usage
