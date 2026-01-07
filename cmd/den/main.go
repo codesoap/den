@@ -253,24 +253,34 @@ func rescan() {
 	if flag.NArg() != 1 {
 		log.Fatalln("Got unexpected arguments for the rescan command.")
 	}
-	progress := make(chan den.Progress)
+	checkProgress := make(chan den.Progress)
+	indexProgress := make(chan den.Progress)
 	var wg sync.WaitGroup
 	wg.Go(func() {
-		fmt.Fprint(os.Stderr, "Checking need for updates... ")
-		updateReceived := false
 		for {
-			prog, ok := <-progress
+			prog, ok := <-checkProgress
 			if !ok {
-				if updateReceived {
-					// Only assume we're done if there was at least one
-					// progress update:
-					fmt.Fprintf(os.Stderr, "done\n")
-				}
-				return
+				break
 			}
-			if !updateReceived {
+			if prog.Total == 0 {
+				fmt.Fprintf(os.Stderr, "\rLooking for changes ca. 100%% (0/ca. 0)... ")
+			} else {
+				percent := min(100, prog.Done*100/prog.Total)
+				fmt.Fprintf(os.Stderr, "\rLooking for changes ca. %d%% (%d/ca. %d)... ",
+					percent, prog.Done, prog.Total)
+			}
+		}
+		checkDone := false
+		for {
+			prog, ok := <-indexProgress
+			if !ok {
+				break
+			}
+			if !checkDone {
+				// Assume there was no error in the checking phase, if a (re-)index
+				// update has been received.
 				fmt.Fprintf(os.Stderr, "done\n")
-				updateReceived = true
+				checkDone = true
 			}
 			if prog.Total == 0 {
 				fmt.Fprintf(os.Stderr, "\r(Re-)Indexing 100%% (0/0)... ")
@@ -280,8 +290,9 @@ func rescan() {
 			}
 		}
 	})
-	if err := den.Rescan(db, progress); err != nil {
+	if err := den.Rescan(db, checkProgress, indexProgress); err != nil {
 		log.Fatalf("Could not rescan: %s\n", err)
 	}
 	wg.Wait()
+	fmt.Fprintf(os.Stderr, "done\n")
 }

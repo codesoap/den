@@ -12,24 +12,35 @@ import (
 
 // Rescan updates the database to contain up to date information
 // about files of all tracked paths.
-func Rescan(db database.DB, progress chan Progress) error {
-	defer close(progress)
+func Rescan(db database.DB, checkProgress, indexProgress chan Progress) error {
+	defer close(indexProgress)
 	paths, err := db.TrackedPaths()
 	if err != nil {
+		close(checkProgress)
 		return fmt.Errorf("could not query tracked paths: %s", err)
 	}
+	prog := Progress{}
+	prog.Total, err = db.AllFileCount()
+	if err != nil {
+		close(checkProgress)
+		return fmt.Errorf("could not query total file count: %s", err)
+	}
 	if err := db.BeginTx(); err != nil {
+		close(checkProgress)
 		return err
 	}
+
 	toReindex := make(map[string]fs.DirEntry)
 	for i := range paths {
-		todo, err := rescanPath(db, paths[i])
+		todo, err := rescanPath(db, paths[i], checkProgress, &prog)
 		if err != nil {
+			close(checkProgress)
 			_ = db.Rollback()
 			return fmt.Errorf("could not rescan path '%s': %s", paths[i], err)
 		}
 		maps.Copy(toReindex, todo)
 	}
+	close(checkProgress)
 	if err := db.Commit(); err != nil {
 		// The transaction of checking the database and deleting old entries
 		// is separated from the (re-)index transactions, so that no
@@ -40,10 +51,10 @@ func Rescan(db database.DB, progress chan Progress) error {
 
 	entriesInTx := 0
 	var lastProgressUpdate time.Time
-	prog := Progress{Total: len(toReindex)}
+	prog = Progress{Total: len(toReindex)}
 	for path, entry := range toReindex {
 		if time.Since(lastProgressUpdate) >= time.Second {
-			progress <- prog
+			indexProgress <- prog
 			lastProgressUpdate = time.Now()
 		}
 		if entriesInTx == 0 {
@@ -70,7 +81,7 @@ func Rescan(db database.DB, progress chan Progress) error {
 		}
 	}
 	prog.Done = prog.Total
-	progress <- prog
+	indexProgress <- prog
 	return nil
 }
 
@@ -78,15 +89,20 @@ func Rescan(db database.DB, progress chan Progress) error {
 // files found on the filesystem. Removed files are removed from the
 // database and files that should be newly indexed or re-indexed are
 // returned.
-func rescanPath(db database.DB, path string) (map[string]fs.DirEntry, error) {
+func rescanPath(db database.DB, path string, progress chan Progress, prog *Progress) (map[string]fs.DirEntry, error) {
 	// TODO: Use temporary SQLite table to use less memory:
 	oldInfos, err := db.AllFileInfosAt(path)
 	if err != nil {
 		return nil, err
 	}
 	newInfos := make(map[string]fs.DirEntry)
+	var lastProgressUpdate time.Time
 	err = filepath.WalkDir(path,
 		func(path string, d fs.DirEntry, err error) error {
+			if time.Since(lastProgressUpdate) >= time.Second {
+				progress <- *prog
+				lastProgressUpdate = time.Now()
+			}
 			if err != nil {
 				return err
 			}
@@ -105,11 +121,13 @@ func rescanPath(db database.DB, path string) (map[string]fs.DirEntry, error) {
 			}
 			// TODO: Use temporary SQLite table to use less memory:
 			newInfos[path] = d
+			prog.Done++
 			return nil
 		})
 	if err != nil {
 		return nil, err
 	}
+	progress <- *prog
 
 	var deletePaths []string
 	toIndex := make(map[string]fs.DirEntry)

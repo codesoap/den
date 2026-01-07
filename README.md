@@ -64,7 +64,7 @@ $ den -c 2019 picture | fzf
 $ # Whenever significant changes happened in the tracked directories,
 $ # you can update the database like this:
 $ den rescan
-Checking need for updates... done
+Looking for changes ca. 100% (5024/ca. 5022)... done
 (Re-)Indexing 100% (12/12)... done
 ```
 

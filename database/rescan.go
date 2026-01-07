@@ -12,6 +12,12 @@ type ShortFileInfo struct {
 	ModTime time.Time
 }
 
+func (db DB) AllFileCount() (int, error) {
+	row := db.d.QueryRow(`SELECT COUNT(*) FROM file`)
+	var cnt int
+	return cnt, row.Scan(&cnt)
+}
+
 // AllFileInfosAt returns a map with paths as keys, containing all
 // stored paths below the given path with file info.
 //
