@@ -3,11 +3,13 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 )
 
 type FileFilter struct {
 	CreatedSince, CreatedUntil *time.Time
+	Prefix                     string
 }
 
 type PictureFilter struct {
@@ -39,7 +41,7 @@ func (db DB) PrintPicturesPaths(filter PictureFilter) error {
 		`INNER JOIN picture p ON p.file = f.id ` +
 		`WHERE 1 = 1 ` // Ensure that "AND" can be used to add filters.
 	var args []any
-	q, args = addCreatedFilter(q, args, filter.FileFilter)
+	q, args = addFileFilters(q, args, filter.FileFilter)
 	if filter.Camera != "" {
 		q += `AND p.camera = ? `
 		args = append(args, filter.Camera)
@@ -57,7 +59,7 @@ func (db DB) PrintVideosPaths(filter VideoFilter) error {
 		`INNER JOIN video v ON v.file = f.id ` +
 		`WHERE 1 = 1 ` // Ensure that "AND" can be used to add filters.
 	var args []any
-	q, args = addCreatedFilter(q, args, filter.FileFilter)
+	q, args = addFileFilters(q, args, filter.FileFilter)
 	if filter.MinDuration != nil {
 		q += `AND v.seconds >= ? `
 		args = append(args, int(filter.MinDuration.Seconds()))
@@ -91,7 +93,7 @@ func (db DB) PrintAudiosPaths(filter AudioFilter) error {
 		`INNER JOIN audio a ON a.file = f.id ` +
 		`WHERE 1 = 1 ` // Ensure that "AND" can be used to add filters.
 	var args []any
-	q, args = addCreatedFilter(q, args, filter.FileFilter)
+	q, args = addFileFilters(q, args, filter.FileFilter)
 	if filter.MinDuration != nil {
 		q += `AND a.seconds >= ? `
 		args = append(args, int(filter.MinDuration.Seconds()))
@@ -125,7 +127,7 @@ func (db DB) PrintDocumentsPaths(filter DocumentFilter) error {
 		`INNER JOIN document d ON d.file = f.id ` +
 		`WHERE 1 = 1 ` // Ensure that "AND" can be used to add filters.
 	var args []any
-	q, args = addCreatedFilter(q, args, filter.FileFilter)
+	q, args = addFileFilters(q, args, filter.FileFilter)
 	if filter.TxtOnly {
 		q += `AND f.mime LIKE ? `
 		args = append(args, "text/%")
@@ -145,7 +147,7 @@ func (db DB) PrintOthersPaths(filter FileFilter) error {
 		`AND NOT EXISTS (SELECT 1 FROM audio a WHERE a.file = f.id) ` +
 		`AND NOT EXISTS (SELECT 1 FROM document d WHERE d.file = f.id) `
 	var args []any
-	q, args = addCreatedFilter(q, args, filter)
+	q, args = addFileFilters(q, args, filter)
 	q += `ORDER BY f.modified DESC `
 	rows, err := db.d.Query(q, args...)
 	if err != nil {
@@ -157,7 +159,7 @@ func (db DB) PrintOthersPaths(filter FileFilter) error {
 func (db DB) PrintAllPaths(filter FileFilter) error {
 	q := `SELECT path FROM file f WHERE 1 = 1 `
 	var args []any
-	q, args = addCreatedFilter(q, args, filter)
+	q, args = addFileFilters(q, args, filter)
 	q += `ORDER BY f.modified DESC `
 	rows, err := db.d.Query(q, args...)
 	if err != nil {
@@ -166,7 +168,7 @@ func (db DB) PrintAllPaths(filter FileFilter) error {
 	return printPaths(rows)
 }
 
-func addCreatedFilter(q string, args []any, filter FileFilter) (string, []any) {
+func addFileFilters(q string, args []any, filter FileFilter) (string, []any) {
 	if filter.CreatedSince != nil {
 		q += `AND f.created_guess >= ? `
 		args = append(args, filter.CreatedSince.Unix())
@@ -174,6 +176,13 @@ func addCreatedFilter(q string, args []any, filter FileFilter) (string, []any) {
 	if filter.CreatedUntil != nil {
 		q += `AND f.created_guess <= ? `
 		args = append(args, filter.CreatedUntil.Unix())
+	}
+	if filter.Prefix != "" {
+		q += `AND f.path LIKE ? `
+		prefix := strings.ReplaceAll(filter.Prefix, `\`, `\\`)
+		prefix = strings.ReplaceAll(prefix, `%`, `\%`)
+		prefix = strings.ReplaceAll(prefix, `_`, `\_`)
+		args = append(args, prefix+`%`)
 	}
 	return q, args
 }

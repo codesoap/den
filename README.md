@@ -65,6 +65,10 @@ $ # Find pictures taken in 2019; use fzf to further filter the results:
 $ den -c 2019 picture | fzf
 /home/richard/Pictures/Spain/chapel.jpg
 
+$ # Count the number of pictures within the ~/Music directory:
+$ den picture ~/Music | wc -l
+      12
+
 $ # Whenever significant changes happened in the tracked directories,
 $ # you can update the database like this:
 $ den rescan
@@ -85,22 +89,25 @@ Usage:
     den (r|rescan)
     	Update database for deleted, changed or added files within all
     	tracked paths.
-    den [-d] [FILTER...] (p|picture)
+    den [-d] [FILTER...] (p|picture) [<PREFIX>]
         Print the paths of tracked pictures.
-    den [-d] [FILTER...] (v|video)
+    den [-d] [FILTER...] (v|video) [<PREFIX>]
         Print the paths of tracked videos.
-    den [-d] [FILTER...] (a|audio)
+    den [-d] [FILTER...] (a|audio) [<PREFIX>]
         Print the paths of tracked audio files.
-    den [-d] [FILTER...] (d|document)
+    den [-d] [FILTER...] (d|document) [<PREFIX>]
         Print the paths of tracked documents.
-    den [-d] [FILTER...] (o|other)
+    den [-d] [FILTER...] (o|other) [<PREFIX>]
         Print the paths of tracked other files.
-    den [-d] [FILTER...] all
+    den [-d] [FILTER...] all [<PREFIX>]
         Print the paths of tracked files, regardless of category.
 
     Within tracked paths, only non-hidden files are considered. When
     printing files, paths will be sorted by modification date, last
     modified first.
+
+    <PREFIX> is an optional filter for the path. E.g. 'den all .' will
+    only list files in the current directory.
 Options:
     -d
     	Show details about the gathered metadata for the given file type.

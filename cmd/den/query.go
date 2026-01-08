@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"log"
+	"path/filepath"
 	"time"
 
 	"github.com/codesoap/den/database"
 )
 
 func listPictures() {
-	if flag.NArg() != 1 {
+	if flag.NArg() > 2 {
 		log.Fatalln("Too many arguments.")
 	}
 	if dFlag {
@@ -28,7 +29,7 @@ func listPictures() {
 }
 
 func listVideos() {
-	if flag.NArg() != 1 {
+	if flag.NArg() > 2 {
 		log.Fatalln("Too many arguments.")
 	}
 	if dFlag {
@@ -51,7 +52,7 @@ func listVideos() {
 }
 
 func listAudio() {
-	if flag.NArg() != 1 {
+	if flag.NArg() > 2 {
 		log.Fatalln("Too many arguments.")
 	}
 	if dFlag {
@@ -74,7 +75,7 @@ func listAudio() {
 }
 
 func listDocuments() {
-	if flag.NArg() != 1 {
+	if flag.NArg() > 2 {
 		log.Fatalln("Too many arguments.")
 	}
 	if dFlag {
@@ -93,7 +94,7 @@ func listDocuments() {
 }
 
 func listOther() {
-	if flag.NArg() != 1 {
+	if flag.NArg() > 2 {
 		log.Fatalln("Too many arguments.")
 	}
 	if dFlag {
@@ -108,7 +109,7 @@ func listOther() {
 }
 
 func listAll() {
-	if flag.NArg() != 1 {
+	if flag.NArg() > 2 {
 		log.Fatalln("Too many arguments.")
 	}
 	if dFlag {
@@ -133,6 +134,13 @@ func createFilter() database.FileFilter {
 			Date(*createdUntilYear+1, time.January, 0, 0, 0, 0, 0, time.Local).
 			Add(-time.Nanosecond)
 		f.CreatedUntil = &until
+	}
+	if flag.NArg() == 2 {
+		var err error
+		f.Prefix, err = filepath.Abs(flag.Arg(1))
+		if err != nil {
+			log.Fatalf("Could not use prefix '%s' as filter: %s", flag.Arg(1), err)
+		}
 	}
 	return f
 }
