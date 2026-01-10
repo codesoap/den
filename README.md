@@ -130,3 +130,39 @@ Filters:
         Show only plain text files when listing documents. These are files
         suitable for editing with a text editor.
 ```
+
+# Tips
+To use den more easily, you could define small shell functions around
+it in your `~/.bshrc`/`~/.zshrc`/etc. E.g. with this function you could
+easily find and edit recently modified plain text documents by typing
+`recent` in you terminal:
+
+```
+recent() {
+	f="$(den -txt document | fzf -e --no-sort)"
+	test -n "$f" && pushd "$(dirname "$f")" && vim "$(basename "$f")"
+}
+```
+
+If you end up using this a lot, you might even want to define a key
+binding for it. in Zsh, you can bind it to ctrl+Z like this:
+
+```
+recent() {
+	f="$(den -txt document | fzf -e --no-sort)"
+	test -n "$f" && pushd "$(dirname "$f")" && hx "$(basename "$f")"
+}
+recent-widget() {
+	recent
+	zle reset-prompt
+}
+zle -N recent-widget
+bindkey '^Z' recent-widget
+```
+
+If you want to rescan automatically, you could execute `crontab -e` and
+add this line, to rescan every hour (replace `<username>`):
+
+```
+0 * * * * /home/<username>/go/bin/den rescan
+```
