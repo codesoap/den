@@ -3,11 +3,10 @@ remember which documents you last worked on, list all pictures you took
 in 2019, identify full length movies on your disk or all music files of
 Daft Punk in your library.
 
-**den is still in development.** It has only been tested on OpenBSD for now,
-but will probably work on other UNIX-like operating systems as well. Things
-might change significantly as development continues.
-
 # Installation
+den has been tested with Linux and OpenBSD, but will probably also work
+with other Unix-like operating systems.
+
 Make sure you have the C library "mediainfo" installed. On Debian, it
 can be added with `sudo apt install libmediainfo-dev`. It can be removed
 after den has been installed.
