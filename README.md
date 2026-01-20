@@ -7,9 +7,14 @@ Daft Punk in your library.
 den has been tested with Linux and OpenBSD, but will probably also work
 with other Unix-like operating systems.
 
-Make sure you have the C library "mediainfo" installed. On Debian, it
-can be added with `sudo apt install libmediainfo-dev`. It can be removed
-after den has been installed.
+Precompiled binaries can be downloaded from the [releases
+section](https://github.com/codesoap/den/releases/) for Linux and
+OpenBSD.
+
+## Building from source
+If you prefer to build from source, make sure you have the C library
+"mediainfo" installed. On Debian, it can be added with `sudo apt install
+libmediainfo-dev`. It can be removed after den has been installed.
 
 Once that's done, den can be installed with this command:
 
