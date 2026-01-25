@@ -126,12 +126,12 @@ func listAll() {
 func createFilter() database.FileFilter {
 	f := database.FileFilter{}
 	if createdFromYear != nil {
-		since := time.Date(*createdFromYear, time.January, 0, 0, 0, 0, 0, time.Local)
+		since := time.Date(*createdFromYear, time.January, 1, 0, 0, 0, 0, time.Local)
 		f.CreatedSince = &since
 	}
 	if createdUntilYear != nil {
 		until := time.
-			Date(*createdUntilYear+1, time.January, 0, 0, 0, 0, 0, time.Local).
+			Date(*createdUntilYear+1, time.January, 1, 0, 0, 0, 0, time.Local).
 			Add(-time.Nanosecond)
 		f.CreatedUntil = &until
 	}
