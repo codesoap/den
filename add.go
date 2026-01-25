@@ -35,17 +35,13 @@ type Progress struct{ Done, Total int }
 // function returns.
 func Add(path string, db database.DB, progress chan Progress) error {
 	defer close(progress)
-	path, err := filepath.Abs(path)
-	if err != nil {
-		return fmt.Errorf("could not normalize path: %s", err)
-	}
 	if err := db.TrackPath(path); err != nil {
 		return fmt.Errorf("could not track path '%s': %s", path, err)
 	}
 	prog := Progress{}
 	var lastProgressUpdate time.Time
 	paths := make(map[string]fs.DirEntry)
-	err = filepath.WalkDir(path,
+	err := filepath.WalkDir(path,
 		func(path string, d fs.DirEntry, err error) error {
 			if time.Since(lastProgressUpdate) >= time.Second {
 				progress <- prog

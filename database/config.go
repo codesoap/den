@@ -15,7 +15,10 @@ type queryable interface {
 // TrackPath adds a path to be tracked. It will return an error if the
 // path is already tracked.
 func (db *DB) TrackPath(path string) error {
-	path = strings.TrimSuffix(path, string(filepath.Separator))
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("could not normalize path: %s", err)
+	}
 	if _, err := os.Stat(path); err != nil {
 		return fmt.Errorf("could not find info: %s", err)
 	}
@@ -61,6 +64,10 @@ func (db *DB) TrackedPaths() ([]string, error) {
 // UntrackPath removes the given path from the tracked paths. It also
 // removes all file entries that existed only because of this path.
 func (db *DB) UntrackPath(path string) error {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("could not normalize path: %s", err)
+	}
 	tx, err := db.d.Begin()
 	if err != nil {
 		return fmt.Errorf("could not start transaction: %s", err)
