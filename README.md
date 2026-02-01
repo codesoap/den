@@ -3,6 +3,9 @@ remember which documents you last worked on, list all pictures you took
 in 2019, identify full length movies on your disk or all music files of
 Daft Punk in your library.
 
+# Demo
+![Demo](demo.svg)
+
 # Installation
 den has been tested with Linux and OpenBSD, but will probably also work
 with other Unix-like operating systems.
